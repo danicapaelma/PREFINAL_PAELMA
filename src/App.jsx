@@ -12,20 +12,24 @@ Modal.setAppElement("#root");
 
 export default function App() {
   const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [cart, setCart] = useState([]);
   const [filter, setFilter] = useState("All");
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
+  // 🧮 Compute overall total for both overview and cart
   const overallTotal = useMemo(
-    () => products.reduce((sum, p) => sum + p.price * p.quantity, 0),
-    [products]
+    () => cart.reduce((sum, p) => sum + p.price * p.quantity, 0),
+    [cart]
   );
 
+  // ➕ Add new product handler
   function handleAddProduct(newProduct) {
     setProducts((prev) => [newProduct, ...prev]);
     setIsAddOpen(false);
   }
 
+  // 🔁 Update product quantity
   function updateQuantity(id, delta) {
     setProducts((prev) =>
       prev.map((p) =>
@@ -34,11 +38,29 @@ export default function App() {
     );
   }
 
+  // 🛒 Add to cart handler
   function handleAddToCart(id) {
+    const product = products.find((p) => p.id === id);
+    if (!product || product.quantity <= 0) {
+      alert("Out of stock!");
+      return;
+    }
+
     updateQuantity(id, -1);
-    alert("Added to cart!");
+
+    setCart((prevCart) => {
+      const existing = prevCart.find((item) => item.id === id);
+      if (existing) {
+        return prevCart.map((item) =>
+          item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      } else {
+        return [...prevCart, { ...product, quantity: 1 }];
+      }
+    });
   }
 
+  // 🩷 Filter logic
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const filtered = products.filter((p) =>
     filter === "All" ? true : p.category === filter
@@ -51,15 +73,19 @@ export default function App() {
         <div className="header">
           <h1>Product Management App</h1>
           <div className="header-buttons">
-            <button className="btn-ghost" onClick={() => setIsSummaryOpen(true)}>
-              🛒 View Summary
+            {/* 🛒 Cart always visible */}
+            <button className="btn-ghost" onClick={() => setIsCartOpen(true)}>
+              🛒 Cart
             </button>
+
+            {/* ➕ Add Product */}
             <button className="btn-primary" onClick={() => setIsAddOpen(true)}>
               ➕ Add Product
             </button>
           </div>
         </div>
 
+        {/* ROUTES */}
         <Routes>
           <Route
             path="/"
@@ -91,15 +117,28 @@ export default function App() {
                         </tr>
                       ))}
                     </tbody>
+
+                    {/* OVERALL TOTAL */}
+                    <tfoot>
+                      <tr className="total-row">
+                        <td colSpan="3" style={{ textAlign: "right" }}>
+                          Overall Total:
+                        </td>
+                        <td style={{ fontWeight: "bold" }}>
+                          ₱{" "}
+                          {products
+                            .reduce((sum, p) => sum + p.price * p.quantity, 0)
+                            .toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
 
-                {/* PRODUCT GRID WITH FILTER */}
+                {/* AVAILABLE PRODUCTS */}
                 <div className="card section">
                   <div className="section-header">
                     <h2>Available Products</h2>
-
-                    {/* Filter Moved Here */}
                     <div className="filter-row">
                       <label className="small">Filter:</label>
                       <select
@@ -126,7 +165,7 @@ export default function App() {
             }
           />
 
-          {/* PRODUCT DETAIL PAGE */}
+          {/* PRODUCT DETAIL */}
           <Route
             path="/product/:id"
             element={
@@ -153,32 +192,49 @@ export default function App() {
           </button>
         </Modal>
 
-        {/* SUMMARY MODAL */}
+        {/* 🛒 CART MODAL */}
         <Modal
-          isOpen={isSummaryOpen}
-          onRequestClose={() => setIsSummaryOpen(false)}
+          isOpen={isCartOpen}
+          onRequestClose={() => setIsCartOpen(false)}
           className="modal"
           overlayClassName="overlay"
         >
-          <h2>Cart Summary</h2>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.name}</td>
-                  <td>₱ {(p.price * p.quantity).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <h3>Total: ₱ {overallTotal.toFixed(2)}</h3>
-          <button className="btn-ghost" onClick={() => setIsSummaryOpen(false)}>
+          <h2>Your Cart</h2>
+          {cart.length === 0 ? (
+            <p>No items in cart.</p>
+          ) : (
+            <>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.name}</td>
+                      <td>{item.quantity}</td>
+                      <td>₱ {(item.price * item.quantity).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="total-row">
+                    <td colSpan="2" style={{ textAlign: "right" }}>
+                      Total:
+                    </td>
+                    <td style={{ fontWeight: "bold" }}>
+                      ₱ {overallTotal.toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </>
+          )}
+          <button className="btn-ghost" onClick={() => setIsCartOpen(false)}>
             Close
           </button>
         </Modal>
