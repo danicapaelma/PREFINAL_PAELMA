@@ -463,3 +463,56 @@ select {
   background: #ffe6ee;
   box-shadow: 0 4px 10px rgba(255, 182, 193, 0.4);
 }
+
+/* ==============================
+   MODAL STYLING (Add + Summary)
+============================== */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background: #fff0f5;
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 5px 15px rgba(255, 182, 193, 0.5);
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal h2 {
+  color: #d63384;
+  margin-bottom: 15px;
+}
+
+.modal h3 {
+  color: #d63384;
+  margin-top: 15px;
+}
+
+.modal .btn-ghost {
+  margin-top: 15px;
+}
+
+/* Header buttons beside title */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
